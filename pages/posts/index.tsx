@@ -3,6 +3,7 @@ import { FormEvent, useState } from 'react'
 import { GetServerSideProps } from 'next'
 import {prisma} from '../../lib/prisma'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 interface IPosts {
   posts: {
@@ -118,40 +119,49 @@ export default function Home({posts} :IPosts) {
 
   return (
     <div className={styles.container}>
-      <div>
-        <h1 className={styles.title}> 
-          Posts
-        </h1>
-        <form className={styles.form} onSubmit={(e) => handleFormSubmit(e)}>
-          <input 
-            type="text"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({...form, title: e.target.value})}
-             />
-          <input
-            type="text"
-            placeholder="Post"
-            value={form.post}
-            onChange={(e) => setForm({...form, post: e.target.value})}
-          />
-          <button type="submit">{isEditing ? 'Edit' : 'Create'}</button>
-        </form>
-      </div>
+      <h1 className={styles.title}> 
+        Posts
+      </h1>
+      <div className={'row'}>
+        <div className={'col md-2'} >
+          <ul>
+            <li>
+              <Link href="/posts">Posts</Link>
+            </li>
+          </ul>
+        </div>
+        <div className={'col md-10'} >
+          <form className={styles.form} onSubmit={(e) => handleFormSubmit(e)}>
+            <input
+              className={'form-control'}
+              type="text"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({...form, title: e.target.value})}
+            />
+            <input
+              className={'form-control'}
+              type="text"
+              placeholder="Post"
+              value={form.post}
+              onChange={(e) => setForm({...form, post: e.target.value})}
+            />
+            <button className={'btn'} type="submit">{isEditing ? 'Edit' : 'Create'}</button>
+          </form>
 
-      <div>
-        {
-          posts.map(post => {
-            return(
-              <div key={post.id}>
-                <h1>{post.title}</h1>
-                <p>{post.post}</p>
-                <button onClick={() => handleEdit(post)}>Update</button>
-                <button onClick={() => deletePost(post.id)}> Delete</button>
-              </div>
-            )
-          })
-        }
+          {
+            posts.map(post => {
+              return(
+                <div key={post.id}>
+                  <h1>{post.title}</h1>
+                  <p>{post.post}</p>
+                  <button className={'btn btn-success margin-right-5'} onClick={() => handleEdit(post)}><span className="icon-refresh"></span>Update</button>
+                  <button className={'btn btn-error'} onClick={() => deletePost(post.id)}><span className="icon-close"></span>Delete</button>
+                </div>
+              )
+            })
+          }
+        </div>
       </div>
     </div>
   )
