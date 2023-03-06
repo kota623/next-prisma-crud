@@ -4,22 +4,12 @@ import { GetServerSideProps } from 'next'
 import {prisma} from '../../lib/prisma'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import header from '../layout/Header.module.scss'
+import {ApiClient} from '../../lib/api-client'
+import {INotes, INoteForm} from '../../src/models/note_model'
 
-interface IPosts {
-  posts: {
-    title: string,
-    post: string,
-    id: string
-  }[]
-}
-interface IPostForm {
-  title: string
-  post: string
-  id: string
-}
-
-export default function Home({posts} :IPosts) {
-  const [form, setForm] = useState<IPostForm>({
+export default function Home({notes} :INotes) {
+  const [form, setForm] = useState<INoteForm>({
     title: '',
     post: '',
     id: '',
@@ -27,22 +17,15 @@ export default function Home({posts} :IPosts) {
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const router = useRouter();
-  
   const refreshData = () => {
     router.replace(router.asPath)
   }
 
-  const createPost = async (form: IPostForm) => {
+  const createNote = async (form: INoteForm) => {
 
     try {
-      const res = await fetch('/api/create', {
-        method: 'POST',
-        body: JSON.stringify(form),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const data = await res.json()
+      const res = await ApiClient.post(`/note/create`, JSON.stringify(form))
+      const data = await res.data
       setForm({
         title: '',
         post: '',
@@ -55,17 +38,11 @@ export default function Home({posts} :IPosts) {
     }
   }
 
-  const updatePost = async (form: IPostForm) => {
+  const updatePost = async (form: INoteForm) => {
     console.log('updated')
     try {
-      const res = await fetch(`/api/post/${form.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(form),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      const data = await res.json()
+      const res = await ApiClient.put(`/note/${form.id}`, JSON.stringify(form))
+      const data = await res.data
       setForm({
         title: '',
         post: '',
@@ -75,20 +52,13 @@ export default function Home({posts} :IPosts) {
       console.log(data)
     } catch (error) {
       console.log(error)
-      
     }
   }
 
   const deletePost = async (id: string) => {
     try {
-      const res = await fetch(`/api/post/${id}`, {
-        method: 'DELETE',
-        body: JSON.stringify(id),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      const data = res.json()
+      const res = await ApiClient.delete(`/note/${id}`, {data: JSON.stringify(id)})
+      const data = res.data
       console.log(data, res)
       refreshData()
     } catch (error) {
@@ -99,7 +69,7 @@ export default function Home({posts} :IPosts) {
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!isEditing) {
-      createPost(form)
+      createNote(form)
       console.log(form)
     } else if (isEditing) {
       updatePost(form)
@@ -107,7 +77,7 @@ export default function Home({posts} :IPosts) {
     }
   }
 
-  const handleEdit = (data: IPostForm) => {
+  const handleEdit = (data: INoteForm) => {
     setForm({
       title: data.title,
       post: data.post,
@@ -119,14 +89,16 @@ export default function Home({posts} :IPosts) {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}> 
-        Posts
-      </h1>
+      <header className={header.header} >
+        <h1 className={styles.title}>
+          Notes
+        </h1>
+      </header>
       <div className={'row'}>
         <div className={'col md-2'} >
           <ul>
             <li>
-              <Link href="/posts">Posts</Link>
+              <Link href="/notes">Notes</Link>
             </li>
           </ul>
         </div>
@@ -150,13 +122,13 @@ export default function Home({posts} :IPosts) {
           </form>
 
           {
-            posts.map(post => {
+            notes.map(note => {
               return(
-                <div key={post.id}>
-                  <h1>{post.title}</h1>
-                  <p>{post.post}</p>
-                  <button className={'btn btn-success margin-right-5'} onClick={() => handleEdit(post)}><span className="icon-refresh"></span>Update</button>
-                  <button className={'btn btn-error'} onClick={() => deletePost(post.id)}><span className="icon-close"></span>Delete</button>
+                <div key={note.id}>
+                  <h1>{note.title}</h1>
+                  <p>{note.post}</p>
+                  <button className={'btn btn-success margin-right-5'} onClick={() => handleEdit(note)}><span className="icon-refresh"></span>Update</button>
+                  <button className={'btn btn-error'} onClick={() => deletePost(note.id)}><span className="icon-close"></span>Delete</button>
                 </div>
               )
             })
@@ -168,7 +140,7 @@ export default function Home({posts} :IPosts) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const posts = await prisma.note.findMany({
+  const notes = await prisma.note.findMany({
     // This removed the error we get from the date not being serialised 
     select: {
       title: true,
@@ -178,7 +150,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   })
 
   return {
-    props: { posts }
+    props: { notes }
   }
   
 }

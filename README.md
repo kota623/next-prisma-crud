@@ -11,7 +11,7 @@ npx prisma migrate dev
 
 yarn run dev
 ```
-http://localhost:3000/posts
+http://localhost:3000/notes
 
 
 
