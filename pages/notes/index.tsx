@@ -5,19 +5,8 @@ import {prisma} from '../../lib/prisma'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import header from '../layout/Header.module.scss'
-
-interface INotes {
-  notes: {
-    title: string,
-    post: string,
-    id: string
-  }[]
-}
-interface INoteForm {
-  title: string
-  post: string
-  id: string
-}
+import {ApiClient} from '../../lib/api-client'
+import {INotes, INoteForm} from '../../src/models/note_model'
 
 export default function Home({notes} :INotes) {
   const [form, setForm] = useState<INoteForm>({
@@ -28,7 +17,6 @@ export default function Home({notes} :INotes) {
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const router = useRouter();
-  
   const refreshData = () => {
     router.replace(router.asPath)
   }
@@ -36,14 +24,8 @@ export default function Home({notes} :INotes) {
   const createNote = async (form: INoteForm) => {
 
     try {
-      const res = await fetch('/api/note/create', {
-        method: 'POST',
-        body: JSON.stringify(form),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const data = await res.json()
+      const res = await ApiClient.post(`/note/create`, JSON.stringify(form))
+      const data = await res.data
       setForm({
         title: '',
         post: '',
@@ -59,14 +41,8 @@ export default function Home({notes} :INotes) {
   const updatePost = async (form: INoteForm) => {
     console.log('updated')
     try {
-      const res = await fetch(`/api/note/${form.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(form),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      const data = await res.json()
+      const res = await ApiClient.put(`/note/${form.id}`, JSON.stringify(form))
+      const data = await res.data
       setForm({
         title: '',
         post: '',
@@ -76,20 +52,13 @@ export default function Home({notes} :INotes) {
       console.log(data)
     } catch (error) {
       console.log(error)
-      
     }
   }
 
   const deletePost = async (id: string) => {
     try {
-      const res = await fetch(`/api/note/${id}`, {
-        method: 'DELETE',
-        body: JSON.stringify(id),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      const data = res.json()
+      const res = await ApiClient.delete(`/note/${id}`, {data: JSON.stringify(id)})
+      const data = res.data
       console.log(data, res)
       refreshData()
     } catch (error) {
