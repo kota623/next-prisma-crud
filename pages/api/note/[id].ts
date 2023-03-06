@@ -30,10 +30,8 @@ export default async function handle(
         }
       })
       res.status(200).json({ message: "Post updated" });
-      
     } catch (error) {
         console.log(error)
-      
     }
   }
 }

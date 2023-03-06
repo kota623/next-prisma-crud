@@ -4,22 +4,23 @@ import { GetServerSideProps } from 'next'
 import {prisma} from '../../lib/prisma'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import header from '../layout/Header.module.scss'
 
-interface IPosts {
-  posts: {
+interface INotes {
+  notes: {
     title: string,
     post: string,
     id: string
   }[]
 }
-interface IPostForm {
+interface INoteForm {
   title: string
   post: string
   id: string
 }
 
-export default function Home({posts} :IPosts) {
-  const [form, setForm] = useState<IPostForm>({
+export default function Home({notes} :INotes) {
+  const [form, setForm] = useState<INoteForm>({
     title: '',
     post: '',
     id: '',
@@ -32,10 +33,10 @@ export default function Home({posts} :IPosts) {
     router.replace(router.asPath)
   }
 
-  const createPost = async (form: IPostForm) => {
+  const createNote = async (form: INoteForm) => {
 
     try {
-      const res = await fetch('/api/create', {
+      const res = await fetch('/api/note/create', {
         method: 'POST',
         body: JSON.stringify(form),
         headers: {
@@ -55,10 +56,10 @@ export default function Home({posts} :IPosts) {
     }
   }
 
-  const updatePost = async (form: IPostForm) => {
+  const updatePost = async (form: INoteForm) => {
     console.log('updated')
     try {
-      const res = await fetch(`/api/post/${form.id}`, {
+      const res = await fetch(`/api/note/${form.id}`, {
         method: 'PUT',
         body: JSON.stringify(form),
         headers: {
@@ -81,7 +82,7 @@ export default function Home({posts} :IPosts) {
 
   const deletePost = async (id: string) => {
     try {
-      const res = await fetch(`/api/post/${id}`, {
+      const res = await fetch(`/api/note/${id}`, {
         method: 'DELETE',
         body: JSON.stringify(id),
         headers: {
@@ -99,7 +100,7 @@ export default function Home({posts} :IPosts) {
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!isEditing) {
-      createPost(form)
+      createNote(form)
       console.log(form)
     } else if (isEditing) {
       updatePost(form)
@@ -107,7 +108,7 @@ export default function Home({posts} :IPosts) {
     }
   }
 
-  const handleEdit = (data: IPostForm) => {
+  const handleEdit = (data: INoteForm) => {
     setForm({
       title: data.title,
       post: data.post,
@@ -119,14 +120,16 @@ export default function Home({posts} :IPosts) {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}> 
-        Posts
-      </h1>
+      <header className={header.header} >
+        <h1 className={styles.title}>
+          Notes
+        </h1>
+      </header>
       <div className={'row'}>
         <div className={'col md-2'} >
           <ul>
             <li>
-              <Link href="/posts">Posts</Link>
+              <Link href="/notes">Notes</Link>
             </li>
           </ul>
         </div>
@@ -150,13 +153,13 @@ export default function Home({posts} :IPosts) {
           </form>
 
           {
-            posts.map(post => {
+            notes.map(note => {
               return(
-                <div key={post.id}>
-                  <h1>{post.title}</h1>
-                  <p>{post.post}</p>
-                  <button className={'btn btn-success margin-right-5'} onClick={() => handleEdit(post)}><span className="icon-refresh"></span>Update</button>
-                  <button className={'btn btn-error'} onClick={() => deletePost(post.id)}><span className="icon-close"></span>Delete</button>
+                <div key={note.id}>
+                  <h1>{note.title}</h1>
+                  <p>{note.post}</p>
+                  <button className={'btn btn-success margin-right-5'} onClick={() => handleEdit(note)}><span className="icon-refresh"></span>Update</button>
+                  <button className={'btn btn-error'} onClick={() => deletePost(note.id)}><span className="icon-close"></span>Delete</button>
                 </div>
               )
             })
@@ -168,7 +171,7 @@ export default function Home({posts} :IPosts) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const posts = await prisma.note.findMany({
+  const notes = await prisma.note.findMany({
     // This removed the error we get from the date not being serialised 
     select: {
       title: true,
@@ -178,7 +181,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   })
 
   return {
-    props: { posts }
+    props: { notes }
   }
   
 }
